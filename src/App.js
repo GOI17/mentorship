@@ -1,23 +1,47 @@
 import logo from './logo.svg';
 import './App.css';
+import { useState } from 'react';
+
+function InnerComponent() {
+  let [counter, setCounter] = useState(0)
+
+  const handleUpdateCounter = () => {
+    const nextState = counter + 1;
+    setCounter(nextState)
+    console.log(nextState)
+  }
+
+   const handleDecrementCounter = () => {
+    const nextState = counter - 1;
+    setCounter(nextState)
+    console.log(nextState)
+  }
+
+   const handleResetCounter = () => {
+    setCounter(0)
+  }
+
+  return (
+    <div>
+      <p>
+        Counter {counter}
+      </p>
+      <button onClick={handleUpdateCounter}>Increment</button>
+    <button onClick={handleDecrementCounter}>Decrement</button>
+    <button onClick={handleResetCounter}>Reset</button>
+    </div>
+  )
+}
 
 function App() {
+
+  // hooks
+  // useState
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+       <InnerComponent />
     </div>
   );
 }
