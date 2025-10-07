@@ -1,10 +1,4 @@
-const db = {
-  uroqwurioqwue: {
-    id: "uroqwurioqwue",
-    name: "testing",
-    description: "my super very very very long description",
-  },
-};
+const db = {};
 
 class UndefinedError extends Error {
   constructor(message) {
@@ -38,102 +32,104 @@ const TaskStatus = Object.freeze({
 });
 
 const createTasks = (newTask) => {
-  if (newTask === undefined) {
-    throw new UndefinedError(
-      "New task is invalid, please provide a valid object.",
-    );
-  }
-
-  let fieldsWithError = ["id", "name", "description"].filter(
-    (requiredFieldName) => !newTask.hasOwnProperty(requiredFieldName),
-  );
-  if (fieldsWithError.length > 0) {
-    throw new UndefinedError(
-      `New task is invalid, please provide a ${fieldsWithError.toString()}.`,
-    );
-  }
-
-  fieldsWithError = [newTask.id, newTask.name, newTask.description].filter(
-    (requiredFieldValue) => typeof requiredFieldValue !== "string",
-  );
-  if (fieldsWithError.length > 0) {
-    throw new NonValidTypeError(
-      `New task is invalid, please provide a ${fieldsWithError.toString()}.`,
-    );
-  }
-
-  fieldsWithError = [
-    {
-      id: {
-        length: 10,
-      },
-    },
-    {
-      name: {
-        minLength: 5,
-        maxLength: 12,
-      },
-    },
-    {
-      description: {
-        minLength: 5,
-        maxLength: 120,
-      },
-    },
-  ].filter((requiredField) => {
-    const { id: newId, name: newName, description: newDescription } = newTask;
-    const {
-      id: ruleForId,
-      name: ruleForName,
-      description: ruleForDescription,
-    } = requiredField;
-
-    if (ruleForId) {
-      return ruleForId.length !== newId.length;
+  return new Promise((res, reject) => {
+    if (newTask === undefined) {
+      reject(new UndefinedError(
+        "New task is invalid, please provide a valid object.",
+      ));
     }
 
-    if (ruleForName) {
-      return (
-        newName.length > ruleForName.maxLength &&
-        newName.length < ruleForName.minLength
-      );
+    let fieldsWithError = ["id", "name", "description"].filter(
+      (requiredFieldName) => !newTask.hasOwnProperty(requiredFieldName),
+    );
+    if (fieldsWithError.length > 0) {
+      reject(new UndefinedError(
+        `New task is invalid, please provide a ${fieldsWithError.join(", ")}.`,
+      ));
     }
 
-    if (ruleForDescription) {
-      return (
-        newDescription.length > ruleForDescription.maxLength &&
-        newDescription.length < ruleForDescription.minLength
-      );
+    fieldsWithError = [newTask.id, newTask.name, newTask.description].filter(
+      (requiredFieldValue) => typeof requiredFieldValue !== "string",
+    );
+    if (fieldsWithError.length > 0) {
+      reject(new NonValidTypeError(
+        `New task is invalid, please provide a ${fieldsWithError.join(", ")}.`,
+      ));
     }
 
-    return null;
+    // fieldsWithError = [
+    //   {
+    //     id: {
+    //       length: 36,
+    //     },
+    //   },
+    //   {
+    //     name: {
+    //       minLength: 5,
+    //       maxLength: 12,
+    //     },
+    //   },
+    //   {
+    //     description: {
+    //       minLength: 5,
+    //       maxLength: 120,
+    //     },
+    //   },
+    // ].filter((requiredField) => {
+    //   const { id: newId, name: newName, description: newDescription } = newTask;
+    //   const {
+    //     id: ruleForId,
+    //     name: ruleForName,
+    //     description: ruleForDescription,
+    //   } = requiredField;
+
+    //   if (ruleForId) {
+    //     return ruleForId.length !== newId.length;
+    //   }
+
+    //   if (ruleForName) {
+    //     return (
+    //       newName.length > ruleForName.maxLength &&
+    //       newName.length < ruleForName.minLength
+    //     );
+    //   }
+
+    //   if (ruleForDescription) {
+    //     return (
+    //       newDescription.length > ruleForDescription.maxLength &&
+    //       newDescription.length < ruleForDescription.minLength
+    //     );
+    //   }
+
+    //   return null;
+    // });
+    // if (fieldsWithError.length > 0) {
+    //   throw new NonValidValueError(
+    //     `New task is invalid, please provide a ${Object.keys(fieldsWithError).join(", ")}.`,
+    //   );
+    // }
+
+    const entity = {
+      ...newTask,
+      acceptanceCritera: null,
+      discussion: null,
+      assignedTo: null,
+      estimatedTime: 0,
+      burnedTime: 0,
+      pendingTime: 0,
+      status: TaskStatus.new,
+      activityType: null,
+      relatedTask: null,
+    };
+
+    db[entity.id] = entity;
+
+    res(entity);
   });
-  if (fieldsWithError.length > 0) {
-    throw new NonValidValueError(
-      `New task is invalid, please provide a ${fieldsWithError.toString()}.`,
-    );
-  }
-
-  const entity = {
-    ...newTask,
-    acceptanceCritera: null,
-    discussion: null,
-    assignedTo: null,
-    estimatedTime: 0,
-    burnedTime: 0,
-    pendingTime: 0,
-    status: TaskStatus.new,
-    activityType: null,
-    relatedTask: null,
-  };
-
-  db[entity.id] = entity;
-
-  return entity;
 };
 
 const getAllTasks = () => {
-  return Object.values(db);
+  return Promise.resolve(Object.values(db));
 };
 
-export { createTasks, getAllTasks };
+export { createTasks, getAllTasks, TaskStatus };
