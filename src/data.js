@@ -1,4 +1,4 @@
-const db = {};
+let db = {};
 
 class UndefinedError extends Error {
   constructor(message) {
@@ -132,4 +132,35 @@ const getAllTasks = () => {
   return Promise.resolve(Object.values(db));
 };
 
-export { createTasks, getAllTasks, TaskStatus };
+const updateTask = (id, taskToUpdate) => {
+  return new Promise((resolve, reject) => {
+    let entity = db[id]; //db.find((obj) => obj.id === id);
+    if (entity === undefined) {
+      reject(new Error(`Task with id: ${id} was not found.`));
+    }
+
+    entity = {
+      ...entity,
+      ...taskToUpdate
+    };
+
+    db[id] = entity;
+
+    resolve(entity);
+  });
+}
+
+const deleteTask = (id) => {
+  return new Promise((resolve, reject) => {
+    if (id === undefined) reject(new Error("Please provide a valid id"))
+
+    db = Object
+    .values(db)
+    .filter((task) => task.id !== id)
+    .reduce((prev, task) => ({ [task.id]: task, ...prev }), {});
+
+    resolve()
+  });
+}
+
+export { createTasks, getAllTasks, updateTask, deleteTask, TaskStatus };

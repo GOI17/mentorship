@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import { createTasks, getAllTasks, TaskStatus } from "./data";
+import { useEffect, useRef, useState } from "react";
+import { createTasks, getAllTasks, updateTask, TaskStatus, deleteTask } from "./data";
 
 function App() {
   let [allTasks, setAllTasks] = useState();
-  const [title, setTitle] = useState("My super task");
 
   const handleOnSubmit = async (event) => {
     event.preventDefault();
@@ -40,7 +39,23 @@ function App() {
       </form>
       <div className="App">
         {allTasks?.map((task) => {
-          return <Task key={task.id} task={task} />
+          return (
+            <Task
+              key={task.id}
+              task={task}
+              onUpdateTask={(updatedTask) => {
+                setAllTasks((prev) => [
+                  ...prev.filter((task) => task.id !== updatedTask.id),
+                  updatedTask
+                ])
+              }}
+              onDeleteTask={(taskId) => {
+                setAllTasks((prev) =>
+                  prev.filter((task) => task.id !== taskId)
+                );
+              }}
+            />
+          );
         })}
       </div>
     </>
@@ -49,16 +64,36 @@ function App() {
 
 export default App;
 
-const Task = ({ task }) => {
+const Task = ({ task, onUpdateTask, onDeleteTask }) => {
   const [shouldUpdateTask, setShouldUpdateTask] = useState(false);
+  const formRef = useRef();
+
+  const handleOnSubmitTask = async (form) => {
+    const formValues = new FormData(form);
+    const updatedTask = await updateTask(task.id, {
+      status: formValues.get("task-status")
+    });
+    onUpdateTask(updatedTask);
+    setShouldUpdateTask(false);
+  }
+
+  const handleOnChangeTaskStatus = () => {
+    handleOnSubmitTask(formRef.current);
+  }
+
+  const handleOnClickRemoveTask = async (taskId) => {
+    await deleteTask(taskId);
+    onDeleteTask(taskId);
+  }
 
   return (
     <>
       <p>{task.name}</p>
+      <button onClick={() => handleOnClickRemoveTask(task.id)}>Remove task</button>
       {shouldUpdateTask
         ?
-        <form>
-          <select>
+        <form ref={formRef} onSubmit={handleOnSubmitTask}>
+          <select name="task-status" onChange={handleOnChangeTaskStatus}>
             {Object.values(TaskStatus).map((status) => {
               return <option key={status}>{status}</option>
             })}
