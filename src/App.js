@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createTasks, getAllTasks, updateTask, TaskStatus, deleteTask } from "./data";
+import "./App.css";
 
-function App() {
-  let [allTasks, setAllTasks] = useState();
-
-  const handleOnSubmit = async (event) => {
-    event.preventDefault();
-    const form = event.target;
+const useFormTaskCreator = () => {
+  const onSubmit = async (form) => {
     try {
       const formValues = new FormData(form);
       const createdTask = await createTasks({
@@ -15,10 +12,25 @@ function App() {
         description: formValues.get("description")
       });
       form.reset();
-      setAllTasks((prev) => [...prev, createdTask])
+
+      return createdTask;
     } catch (e) {
       console.log(e)
     }
+  }
+
+  return { onSubmit };
+}
+
+function App() {
+  let [allTasks, setAllTasks] = useState();
+  const { onSubmit } = useFormTaskCreator();
+
+  const handleOnSubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const taskEntity = await onSubmit(form);
+    setAllTasks((prev) => [...prev, taskEntity]);
   }
 
   useEffect(() => {
@@ -26,35 +38,48 @@ function App() {
       const allTasks = await getAllTasks()
       setAllTasks(allTasks);
     };
-
     fn();
   }, []);
 
   return (
     <>
-      <form onSubmit={handleOnSubmit}>
-        <input name="name" type="text" placeholder="Task name" />
-        <textarea name="description" placeholder="Task description" />
+      <form style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        marginBottom: "16px",
+        padding: "16px",
+      }}
+        onSubmit={handleOnSubmit}>
+        <input required name="name" type="text" placeholder="Task name" />
+        <textarea required name="description" placeholder="Task description" />
         <button type="submit">Create task</button>
       </form>
       <div className="App">
         {allTasks?.map((task) => {
           return (
-            <Task
+            <div style={{
+              display: "flex",
+              gap: "16px",
+              justifyContent: "space-between"
+            }}
               key={task.id}
-              task={task}
-              onUpdateTask={(updatedTask) => {
-                setAllTasks((prev) => [
-                  ...prev.filter((task) => task.id !== updatedTask.id),
-                  updatedTask
-                ])
-              }}
-              onDeleteTask={(taskId) => {
-                setAllTasks((prev) =>
-                  prev.filter((task) => task.id !== taskId)
-                );
-              }}
-            />
+            >
+              <Task
+                task={task}
+                onUpdateTask={(updatedTask) => {
+                  setAllTasks((prev) => [
+                    ...prev.filter((task) => task.id !== updatedTask.id),
+                    updatedTask
+                  ])
+                }}
+                onDeleteTask={(taskId) => {
+                  setAllTasks((prev) =>
+                    prev.filter((task) => task.id !== taskId)
+                  );
+                }}
+              />
+            </div>
           );
         })}
       </div>
@@ -89,7 +114,6 @@ const Task = ({ task, onUpdateTask, onDeleteTask }) => {
   return (
     <>
       <p>{task.name}</p>
-      <button onClick={() => handleOnClickRemoveTask(task.id)}>Remove task</button>
       {shouldUpdateTask
         ?
         <form ref={formRef} onSubmit={handleOnSubmitTask}>
@@ -104,6 +128,7 @@ const Task = ({ task, onUpdateTask, onDeleteTask }) => {
           setShouldUpdateTask(true);
         }}>{task.status}</p>
       }
+      <button onClick={() => handleOnClickRemoveTask(task.id)}>Remove task</button>
     </>
   )
 }
